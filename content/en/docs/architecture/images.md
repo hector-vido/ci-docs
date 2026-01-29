@@ -1,3 +1,37 @@
+Golang Build Images
+-------------------
+
+There are two types Golang build images created by ART, they are based on [UBI](https://catalog.redhat.com/en/software/base-images).
+
+### Builder
+
+These images are 
+
+- `registry.ci.openshift.org/ocp/builder:rhel-9-golang-{GO_VERSION}-openshift-{MAJOR}.{MINOR}`
+- `registry.ci.openshift.org/ocp/builder:rhel-9-golang-1.25-openshift-4.22`
+
+### Release
+
+These images are the most common used as CI `build-root`, they have several tools installed that people came to expect over time. Things in the build-root image that are not in the base golang builder image: https://github.com/openshift-eng/ocp-build-data/blob/openshift-4.22/ci_images/rhel-9/ci-openshift-build-root/Dockerfile#L29-L76
+
+**Examples:**
+
+- `registry.ci.openshift.org/openshift/release:rhel-9-release-golang-{GO_VERSION}-openshift-{MAJOR}.{MINOR}`
+- `registry.ci.openshift.org/openshift/release:rhel-9-release-golang-1.25-openshift-4.22`
+
+Anything that ART mirrors to app.ci's registry, they also mirror to quay.io/openshift/ci : https://github.com/openshift-eng/art-tools/blob/fb2d13de44091c31ad56d830690aba106949b01e/doozer/doozerlib/cli/images_streams.py#L162-L169 .
+So it is true that any ART builder/build-root image in quay.io/openshift/ci should have an __art prefix.
+But this is not what users would recognize them as. Their Dockerfiles will mention locations on registry.ci.openshift.org.
+We push them to quay.io and maintain a tag (to prevent quay garbage collection) just so that the sha256 pullspecs will resolve successfully when CI swaps it from registry.ci.openshift.org to quay.io/openshift/ci (or quay-proxy).
+
+The build-root (aka release) image is meant to be used as a CI build-root. It has several tools installed that people came to expect over time. They both have golang installed.
+Things in the build-root image that are not in the base golang builder image: https://github.com/openshift-eng/ocp-build-data/blob/openshift-4.22/ci_images/rhel-9/ci-openshift-build-root/Dockerfile#L29-L76
+
+@Justin Pierce and what about the images that doesn't starts with rhel-? Like https://console-openshift-console.apps.ci.l2s4.p1.openshiftapps.com/k8s/ns/openshift/imagestreamtags/release%3Agolang-1.20
+Looks like they are more related to OKD, since they are based on centos (edited) 
+Justin Pierce  [4:11 PM]
+ART does not manage them. Users are probably contribute to those images over time for various reasons, but most OCP components do not rely on them. ART automatically opens PRs against OpenShift components to suggest how to update their Dockerfile and build-root these days (e.g. https://github.com/openshift/origin/commit/975ee049432a4754b98206263f0f56c9e8c50ef4 ). I'm fairly sure there is not as much confusion about the right images to use these days.
+
 ---
 title: "OCP Builder Images"
 description: An overview of the building process of CI images and productized images.
